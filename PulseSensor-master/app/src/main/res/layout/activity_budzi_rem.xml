@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.michal.pulsesensor.BudziRem">
+
+    <NumberPicker
+        android:id="@+id/minGodz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toEndOf="@+id/maxCzas"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <NumberPicker
+        android:id="@+id/minMinuty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        app:layout_constraintStart_toEndOf="@+id/dwuKropek1"
+        app:layout_constraintTop_toTopOf="@+id/minGodz" />
+
+    <NumberPicker
+        android:id="@+id/maxGodz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="51dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="@+id/minMinuty"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/maxCzas"
+        app:layout_constraintTop_toBottomOf="@+id/minGodz" />
+
+    <NumberPicker
+        android:id="@+id/maxMinuty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/maxGodz"
+        app:layout_constraintTop_toBottomOf="@+id/minMinuty"
+        app:layout_constraintTop_toTopOf="@+id/maxGodz" />
+
+    <TextView
+        android:id="@+id/minCzas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Minimalna godzina pobudki: "
+        app:layout_constraintBottom_toBottomOf="@+id/dwuKropek1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/dwuKropek1" />
+
+    <TextView
+        android:id="@+id/maxCzas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Maksymalna godzina pobudki: "
+        app:layout_constraintBottom_toBottomOf="@+id/dwuKropek2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/dwuKropek2" />
+
+    <TextView
+        android:id="@+id/dwuKropek1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:text=":"
+        app:layout_constraintBottom_toBottomOf="@+id/minGodz"
+        app:layout_constraintStart_toEndOf="@+id/minGodz"
+        app:layout_constraintTop_toTopOf="@+id/minGodz" />
+
+    <TextView
+        android:id="@+id/dwuKropek2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="56dp"
+        android:layout_marginStart="54dp"
+        android:text=":"
+        app:layout_constraintBottom_toBottomOf="@+id/maxMinuty"
+        app:layout_constraintEnd_toEndOf="@+id/maxMinuty"
+        app:layout_constraintStart_toStartOf="@+id/maxGodz"
+        app:layout_constraintTop_toTopOf="@+id/maxMinuty" />
+
+    <Button
+        android:id="@+id/ustawButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="116dp"
+        android:text="Ustaw"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:text=""
+        android:textSize="15dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Anuluj" />
+
+    <Button
+        android:id="@+id/Anuluj"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Anuluj Alarm"
+        android:onClick="AnulujBudzik"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ustawButton" />
+</android.support.constraint.ConstraintLayout>

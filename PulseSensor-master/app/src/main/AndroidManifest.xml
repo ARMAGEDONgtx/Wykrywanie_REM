@@ -2,6 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.michal.pulsesensor">
 
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -15,6 +24,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".Alarm"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":remote" />
+        <receiver
+            android:name=".AlarmReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":remote" />
+        <receiver
+            android:name=".AlarmReceiverREM"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":remote" />
+
+        <service
+            android:name=".BluetoothLeService"
+            android:enabled="true" />
+
         <activity
             android:name=".BLECommuncation"
             android:parentActivityName=".MainActivity">
@@ -22,11 +52,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity android:name=".Budzik"></activity>
-        <receiver android:name=".Alarm"
-            android:enabled="true"
-            android:exported="true" />
-
+        <activity android:name=".Budzik" />
+        <activity android:name=".ChooseAlarm" />
+        <activity android:name=".BudziRem" />
+        <activity android:name=".Alarm2" />
+        <activity android:name=".start" />
+        <activity android:name=".blunoactivity" />
+        <activity android:name=".Wykres" />
     </application>
 
 </manifest>

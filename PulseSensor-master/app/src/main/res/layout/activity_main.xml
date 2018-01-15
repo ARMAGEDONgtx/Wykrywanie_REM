@@ -5,50 +5,66 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.michal.pulsesensor.MainActivity">
+    tools:context="com.example.michal.pulsesensor.MainActivity"
+>
 
-    <EditText
+    <TextView
+        android:id="@+id/Puls"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:inputType="textPersonName"
-        android:text="JAAAZDAAAA XD"
-        android:ems="10"
-        android:id="@+id/tekst"
-        tools:layout_constraintTop_creator="1"
-        android:layout_marginStart="96dp"
-        android:layout_marginTop="32dp"
-        tools:layout_constraintLeft_creator="1"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:singleLine="false"
-        android:cursorVisible="false" />
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:shadowColor="@color/colorPrimaryDark"
+        android:shadowDx="4"
+        android:shadowDy="-4"
+        android:shadowRadius="1"
+        android:text="--"
+        android:textColor="@color/colorPrimary"
+        android:textSize="160sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <TextView
+        android:id="@+id/StanPolaczenia"
+        android:layout_width="90dp"
+        android:layout_height="wrap_content"
+        android:text="Nie połączono"
+        android:textColor="#F44336"
+        app:layout_constraintBottom_toTopOf="@+id/buttonSend"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Puls"
+        app:layout_constraintLeft_toLeftOf="parent"/>
 
     <Button
-        android:text="WROBSI/KOMUNIKACJA"
-        android:layout_width="184dp"
-        android:layout_height="68dp"
         android:id="@+id/buttonSend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:onClick="sendMessage"
-        android:layout_marginTop="56dp"
-        app:layout_constraintTop_toBottomOf="@+id/Budzik"
-        app:layout_constraintLeft_toLeftOf="@+id/Budzik" />
+        android:text="Polącz"
+        app:layout_constraintBottom_toTopOf="@+id/Budzik"
+        />
 
     <Button
-        android:text="PAWLINI/BUDZIK"
-        android:layout_width="wrap_content"
+        android:text="Wybierz Budzik"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/Budzik"
-        android:onClick="StartBudzik"
-        android:layout_marginTop="64dp"
-        app:layout_constraintTop_toBottomOf="@+id/button3"
-        app:layout_constraintLeft_toLeftOf="@+id/button3" />
+        android:onClick="chooseAlarm"
+        app:layout_constraintBottom_toTopOf="@+id/button3" />
 
     <Button
-        android:text="Slaby/wykresy"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/button3"
-        android:layout_marginTop="64dp"
-        app:layout_constraintTop_toBottomOf="@+id/tekst"
-        app:layout_constraintLeft_toLeftOf="@+id/tekst" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="wykres"
+        android:text="Wczytaj Wykres"
+        app:layout_constraintBottom_toTopOf="@+id/button4"/>
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="zamknijAplikacje"
+        android:text="Zamknij Aplikacje"
+        app:layout_constraintBottom_toTopOf="parent"/>
 </android.support.constraint.ConstraintLayout>

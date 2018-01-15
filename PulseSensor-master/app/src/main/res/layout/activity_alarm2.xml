@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.michal.pulsesensor.Alarm2">
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph2"
+        android:layout_width="match_parent"
+        android:layout_height="392dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <Button
+        android:id="@+id/stopAlarm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="68dp"
+        android:background="@android:color/holo_orange_dark"
+        android:onClick="stopMusic"
+        android:text="STOP ALARM"
+        android:textColor="@color/colorAccent"
+        android:textSize="25dp"
+        app:layout_constraintTop_toBottomOf="@id/graph2" />
+    <Button
+        android:id="@+id/powrotDoMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Powrot do Menu"
+        android:enabled="false"
+        app:layout_constraintTop_toBottomOf="@id/stopAlarm"
+        android:onClick="powrotDoMenu"
+        />
+</android.support.constraint.ConstraintLayout>
