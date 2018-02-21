@@ -10,9 +10,9 @@ import android.media.MediaPlayer;
  * Created by kuba on 2017-12-14.
  */
 
+// Serwis towrzy intent, który włącza alarm. Wykorzystywany przy zwyklym budziku
+
 public class AlarmReceiver extends BroadcastReceiver {
-    MediaPlayer music;
-    AudioManager audio;
 
     public void onReceive(Context context, Intent intent) {
         Intent serviceIntent = new Intent(context,AlarmReceiver.class);

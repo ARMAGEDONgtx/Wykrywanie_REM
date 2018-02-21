@@ -14,6 +14,8 @@ import android.widget.Toast;
  * Created by Kuba on 2017-11-24.
  */
 
+// KLASA NIEUŻYWANA
+
 public class Alarm extends BroadcastReceiver {
 
     @Override

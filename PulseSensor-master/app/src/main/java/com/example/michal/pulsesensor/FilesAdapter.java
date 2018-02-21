@@ -16,6 +16,8 @@ import java.util.ArrayList;
  * Created by kuba on 2018-01-10.
  */
 
+// KLASA potrzebna do spinnera - wybor wykresu do wczytania
+
 public class FilesAdapter extends ArrayAdapter<String> {
 
     public FilesAdapter(Context context, ArrayList<String > adapter){

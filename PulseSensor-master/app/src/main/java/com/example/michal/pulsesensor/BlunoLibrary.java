@@ -30,17 +30,20 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+* Bilbioteka zewnętrzna bazująca na funkcjonalnościach zaimplemetnowanych w BluetoothLeService
+* dostosowana do urządzenia BlunoBeetle
+*
+*/
 
+
+//aktywność, zarządzająca interfejsem do komunikowania się
 
 public abstract  class BlunoLibrary  extends Activity {
 
     private Context mainContext=this;
 
 
-//	public BlunoLibrary(Context theContext) {
-//
-//		mainContext=theContext;
-//	}
 
     public abstract void onConectionStateChange(connectionStateEnum theconnectionStateEnum);
     public abstract void onSerialReceived(String theString);
@@ -51,18 +54,16 @@ public abstract  class BlunoLibrary  extends Activity {
         }
     }
 
-    private int mBaudrate=115200;	//set the default baud rate to 115200
-    private String mPassword="AT+PASSWOR=DFRobot\r\n";
+    private int mBaudrate=115200;	//ustawienie domyślnego baudratu
+    private String mPassword="AT+PASSWOR=DFRobot\r\n"; //hasło do urządzenia
 
 
-    private String mBaudrateBuffer = "AT+CURRUART="+mBaudrate+"\r\n";
-
-//	byte[] mBaudrateBuffer={0x32,0x00,(byte) (mBaudrate & 0xFF),(byte) ((mBaudrate>>8) & 0xFF),(byte) ((mBaudrate>>16) & 0xFF),0x00};;
+    private String mBaudrateBuffer = "AT+CURRUART="+mBaudrate+"\r\n"; //string z ustawieniem baudratu przez komendy AT
 
 
     public void serialBegin(int baud){
         mBaudrate=baud;
-        mBaudrateBuffer = "AT+CURRUART="+mBaudrate+"\r\n";
+        mBaudrateBuffer = "AT+CURRUART="+mBaudrate+"\r\n"; //string z ustawieniem baudratu przez komendy AT, z możliwością zmiany baudratu
     }
 
 
@@ -90,6 +91,7 @@ public abstract  class BlunoLibrary  extends Activity {
 
     private final static String TAG = BlunoLibrary.class.getSimpleName();
 
+    //otwieranie połączenia
     private Runnable mConnectingOverTimeRunnable=new Runnable(){
 
         @Override
@@ -100,6 +102,8 @@ public abstract  class BlunoLibrary  extends Activity {
             mBluetoothLeService.close();
         }};
 
+
+    //zamykania połączenia
     private Runnable mDisonnectingOverTimeRunnable=new Runnable(){
 
         @Override
@@ -110,12 +114,16 @@ public abstract  class BlunoLibrary  extends Activity {
             mBluetoothLeService.close();
         }};
 
+    //konkretne parametry do komunikacji z BlunoBeetle
     public static final String SerialPortUUID="0000dfb1-0000-1000-8000-00805f9b34fb";
     public static final String CommandUUID="0000dfb2-0000-1000-8000-00805f9b34fb";
     public static final String ModelNumberStringUUID="00002a24-0000-1000-8000-00805f9b34fb";
 
+
+    //obsługa pojawienia się na ekranie aktywności
     public void onCreateProcess()
     {
+        // sprawdzanie czy Bluetooth jest wspierany, jezeli nie to wyłączamy aktywność
         if(!initiate())
         {
             Toast.makeText(mainContext, R.string.error_bluetooth_not_supported,
@@ -124,12 +132,13 @@ public abstract  class BlunoLibrary  extends Activity {
         }
 
 
+        //uruchamianie serwisu do zarządzania Bluetooth'em
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
-        // Initializes list view adapter.
         mLeDeviceListAdapter = new LeDeviceListAdapter();
-        // Initializes and show the scan Device Dialog
+
+        //inicjalizacja dialogu do skanowania i wykrywania urządzeń
         mScanDeviceDialog = new AlertDialog.Builder(mainContext)
                 .setTitle("BLE Device Scan...").setAdapter(mLeDeviceListAdapter, new DialogInterface.OnClickListener() {
 
@@ -187,12 +196,10 @@ public abstract  class BlunoLibrary  extends Activity {
 
 
 
+    //obsługa powrotu do aktywności(gdy ponownie pojawi się na ekranie)
     public void onResumeProcess() {
         System.out.println("BlUNOActivity onResume");
-        // Ensures Bluetooth is enabled on the device. If Bluetooth is not
-        // currently enabled,
-        // fire an intent to display a dialog asking the user to grant
-        // permission to enable it.
+       //jezeli bluetooth nie jest włączony włączamy dialog, który to umożliwi
         if (!mBluetoothAdapter.isEnabled()) {
             if (!mBluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(
@@ -201,14 +208,13 @@ public abstract  class BlunoLibrary  extends Activity {
             }
         }
 
-
         mainContext.registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
     }
 
 
+    //obsługa częsciowego zaniku aktywności z ekranu, celowe usunięcie kodu abyb nie przerwyać połączenia
     public void onPauseProcess() {
-        /*
         System.out.println("BLUNOActivity onPause");
         scanLeDevice(false);
         mainContext.unregisterReceiver(mGattUpdateReceiver);
@@ -224,34 +230,12 @@ public abstract  class BlunoLibrary  extends Activity {
 //			mBluetoothLeService.close();
         }
         mSCharacteristic=null;
-        Toast.makeText(getBaseContext(), "onPause", Toast.LENGTH_SHORT).show();
-    */
+
     }
 
-
+    //obsługa całkowitego zaniku aktywności z ekranu, celowe usunięcie kodu abyb nie przerwyać połączenia
     public void onStopProcess() {
-        /*
         System.out.println("MiUnoActivity onStop");
-        scanLeDevice(false);
-        mainContext.unregisterReceiver(mGattUpdateReceiver);
-        mLeDeviceListAdapter.clear();
-        mConnectionState=connectionStateEnum.isToScan;
-        onConectionStateChange(mConnectionState);
-        mScanDeviceDialog.dismiss();
-        if(mBluetoothLeService!=null)
-        {
-            mBluetoothLeService.disconnect();
-            mHandler.postDelayed(mDisonnectingOverTimeRunnable, 10000);
-
-			mBluetoothLeService.close();
-        }
-        mSCharacteristic=null;
-        */
-
-
-
-        Toast.makeText(getBaseContext(), "onStop", Toast.LENGTH_SHORT).show();
-        /*
         if(mBluetoothLeService!=null)
         {
 //			mBluetoothLeService.disconnect();
@@ -259,17 +243,19 @@ public abstract  class BlunoLibrary  extends Activity {
             mHandler.removeCallbacks(mDisonnectingOverTimeRunnable);
             mBluetoothLeService.close();
         }
-        */
+        mSCharacteristic=null;
     }
 
+
+    //obsługa zamknięcia aktyności
     public void onDestroyProcess() {
-        /*
+
         mainContext.unbindService(mServiceConnection);
-        mBluetoothLeService = null;*/
+        mBluetoothLeService = null;
     }
 
     public void onActivityResultProcess(int requestCode, int resultCode, Intent data) {
-        // User chose not to enable Bluetooth.
+        //jezeli uzytkownik nie włączy bluetooth'a to zamykamy
         if (requestCode == REQUEST_ENABLE_BT
                 && resultCode == Activity.RESULT_CANCELED) {
             ((Activity) mainContext).finish();
@@ -277,35 +263,31 @@ public abstract  class BlunoLibrary  extends Activity {
         }
     }
 
+
     boolean initiate()
     {
-        // Use this check to determine whether BLE is supported on the device.
-        // Then you can
-        // selectively disable BLE-related features.
+        // sprawdzanie czy bluetooth jest wspierany przez system
         if (!mainContext.getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_BLUETOOTH_LE)) {
             return false;
         }
 
-        // Initializes a Bluetooth adapter. For API level 18 and above, get a
-        // reference to
-        // BluetoothAdapter through BluetoothManager.
+        //inicjalizacja adaptera , dla API powyzej 18 robimy to przez BluetoothManager.
         final BluetoothManager bluetoothManager = (BluetoothManager) mainContext.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
-        // Checks if Bluetooth is supported on the device.
         if (mBluetoothAdapter == null) {
             return false;
         }
         return true;
     }
 
-    // Handles various events fired by the Service.
-    // ACTION_GATT_CONNECTED: connected to a GATT server.
-    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
-    //                        or notification operations.
+
+    //obsługa komunikacji z serwisem BletoothLeService
+    // ACTION_GATT_CONNECTED: połączono do GATT serwisu
+    // ACTION_GATT_DISCONNECTED: rozłączono z GATT
+    // ACTION_GATT_SERVICES_DISCOVERED: odkryto GATT
+    // ACTION_DATA_AVAILABLE: otrzymano dane z urządzenia, rezultat odczytu charakterystyki bądź notyfikacji
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @SuppressLint("DefaultLocale")
         @Override
@@ -323,7 +305,6 @@ public abstract  class BlunoLibrary  extends Activity {
                 mHandler.removeCallbacks(mDisonnectingOverTimeRunnable);
                 mBluetoothLeService.close();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                // Show all the supported services and characteristics on the user interface.
                 for (BluetoothGattService gattService : mBluetoothLeService.getSupportedGattServices()) {
                     System.out.println("ACTION_GATT_SERVICES_DISCOVERED  "+
                             gattService.getUuid().toString());
@@ -358,15 +339,12 @@ public abstract  class BlunoLibrary  extends Activity {
 
                 System.out.println("displayData "+intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
 
-//            	mPlainProtocol.mReceivedframe.append(intent.getStringExtra(BluetoothLeService.EXTRA_DATA)) ;
-//            	System.out.print("mPlainProtocol.mReceivedframe:");
-//            	System.out.println(mPlainProtocol.mReceivedframe.toString());
-
-
             }
         }
     };
 
+
+    //obsługa kliknięcia przycisku "SCAN"
     void buttonScanOnClickProcess()
     {
         switch (mConnectionState) {
@@ -393,7 +371,7 @@ public abstract  class BlunoLibrary  extends Activity {
                 mBluetoothLeService.disconnect();
                 mHandler.postDelayed(mDisonnectingOverTimeRunnable, 10000);
 
-//			mBluetoothLeService.close();
+			   // mBluetoothLeService.close();
                 mConnectionState=connectionStateEnum.isDisconnecting;
                 onConectionStateChange(mConnectionState);
                 break;
@@ -434,7 +412,7 @@ public abstract  class BlunoLibrary  extends Activity {
         }
     }
 
-    // Code to manage Service lifecycle.
+
     ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -575,7 +553,6 @@ public abstract  class BlunoLibrary  extends Activity {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
-            // General ListView optimization code.
             if (view == null) {
                 view = mInflator.inflate(R.layout.listitem_device, null);
                 viewHolder = new ViewHolder();

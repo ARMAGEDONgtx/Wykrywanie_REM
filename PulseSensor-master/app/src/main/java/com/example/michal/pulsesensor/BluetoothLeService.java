@@ -21,8 +21,13 @@ import java.util.List;
 
 
 /**
- * Service for managing connection and data communication with a GATT server hosted on a
- * given Bluetooth LE device.
+ * ZEWNETRZNA BIBLIOTEKA
+ * Serwis do zarządzania połączeniem i danymi komunikacji przez serwer GATT na danym urządzeniu BLE
+ * Zarządznie:
+ * -peryferami Bluetooth(np. adapter w telefonie)
+ * -serwisami GATT
+ * -charakterystykami (pisanie, odczytywanie)
+ * -deskryptorami
  */
 public class BluetoothLeService extends Service {
     private final static String TAG = BluetoothLeService.class.getSimpleName();
@@ -38,15 +43,14 @@ public class BluetoothLeService extends Service {
     public int mConnectionState = STATE_DISCONNECTED;
 
 
-    //To tell the onCharacteristicWrite call back function that this is a new characteristic,
-    //not the Write Characteristic to the device successfully.
+    //okreslenie nowej charakterystyki
     private static final int WRITE_NEW_CHARACTERISTIC = -1;
-    //define the limited length of the characteristic.
+    //maksymalna długość chcarakterystyki
     private static final int MAX_CHARACTERISTIC_LENGTH = 17;
-    //Show that Characteristic is writing or not.
+    //okreslenie czy charakterystyka jest nadpisywana czy nie
     private boolean mIsWritingCharacteristic=false;
 
-    //class to store the Characteristic and content string push into the ring buffer.
+    //klasa to gromadzenie charakterystyk i zawartosci w ring bufferze
     private class BluetoothGattCharacteristicHelper{
         BluetoothGattCharacteristic mCharacteristic;
         String mCharacteristicValue;
@@ -68,11 +72,8 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
-//    public final static UUID UUID_HEART_RATE_MEASUREMENT =
-//            UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
 
-    // Implements callback methods for GATT events that the app cares about.  For example,
-    // connection change and services discovered.
+    //Implemetntacja metody dla zdarzen zwiazancyh z serwerem GATT np. zmiana statusu połączenia czy odkrycie nowego serwisu
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -83,7 +84,7 @@ public class BluetoothLeService extends Service {
                 mConnectionState = STATE_CONNECTED;
                 broadcastUpdate(intentAction);
                 Log.i(TAG, "Connected to GATT server.");
-                // Attempts to discover services after successful connection.
+                //Po połączeniu próba wykrycia istniejących serwisów
                 if(mBluetoothGatt.discoverServices())
                 {
                     Log.i(TAG, "Attempting to start service discovery:");
@@ -93,8 +94,6 @@ public class BluetoothLeService extends Service {
                     Log.i(TAG, "Attempting to start service discovery:not success");
 
                 }
-
-
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
@@ -103,7 +102,7 @@ public class BluetoothLeService extends Service {
             }
         }
 
-        @Override
+        @Override //wykrywanie nowych serwisów
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             System.out.println("onServicesDiscovered "+status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -113,13 +112,13 @@ public class BluetoothLeService extends Service {
             }
         }
 
-        @Override
+        @Override //implementacja metody zajmująca się wpisywaniem danych do charakterystyk
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
-            //this block should be synchronized to prevent the function overloading
             synchronized(this)
             {
-                //CharacteristicWrite success
+                //w zależnosci od status, wykonujemy dane operacje
+                //Pierwszy przypadek gdy charatkerystyka istnieje
                 if(status == BluetoothGatt.GATT_SUCCESS)
                 {
                     System.out.println("onCharacteristicWrite success:"+ new String(characteristic.getValue()));
@@ -136,10 +135,8 @@ public class BluetoothLeService extends Service {
                                 bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(0, MAX_CHARACTERISTIC_LENGTH).getBytes("ISO-8859-1"));
 
                             } catch (UnsupportedEncodingException e) {
-                                // this should never happen because "US-ASCII" is hard-coded.
                                 throw new IllegalStateException(e);
                             }
-
 
                             if(mBluetoothGatt.writeCharacteristic(bluetoothGattCharacteristicHelper.mCharacteristic))
                             {
@@ -154,7 +151,6 @@ public class BluetoothLeService extends Service {
                             try {
                                 bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.getBytes("ISO-8859-1"));
                             } catch (UnsupportedEncodingException e) {
-                                // this should never happen because "US-ASCII" is hard-coded.
                                 throw new IllegalStateException(e);
                             }
 
@@ -165,16 +161,11 @@ public class BluetoothLeService extends Service {
                                 System.out.println("writeCharacteristic init "+new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue())+ ":failure");
                             }
                             bluetoothGattCharacteristicHelper.mCharacteristicValue = "";
-
-//	            			System.out.print("before pop:");
-//	            			System.out.println(mCharacteristicRingBuffer.size());
                             mCharacteristicRingBuffer.pop();
-//	            			System.out.print("after pop:");
-//	            			System.out.println(mCharacteristicRingBuffer.size());
                         }
                     }
                 }
-                //WRITE a NEW CHARACTERISTIC
+                //Pisanie nowej charkaterystyki
                 else if(status == WRITE_NEW_CHARACTERISTIC)
                 {
                     if((!mCharacteristicRingBuffer.isEmpty()) && mIsWritingCharacteristic==false)
@@ -186,7 +177,6 @@ public class BluetoothLeService extends Service {
                             try {
                                 bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(0, MAX_CHARACTERISTIC_LENGTH).getBytes("ISO-8859-1"));
                             } catch (UnsupportedEncodingException e) {
-                                // this should never happen because "US-ASCII" is hard-coded.
                                 throw new IllegalStateException(e);
                             }
 
@@ -203,7 +193,6 @@ public class BluetoothLeService extends Service {
                             try {
                                 bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.getBytes("ISO-8859-1"));
                             } catch (UnsupportedEncodingException e) {
-                                // this should never happen because "US-ASCII" is hard-coded.
                                 throw new IllegalStateException(e);
                             }
 
@@ -211,29 +200,17 @@ public class BluetoothLeService extends Service {
                             if(mBluetoothGatt.writeCharacteristic(bluetoothGattCharacteristicHelper.mCharacteristic))
                             {
                                 System.out.println("writeCharacteristic init "+new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue())+ ":success");
-//	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[0]);
-//	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[1]);
-//	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[2]);
-//	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[3]);
-//	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[4]);
-//	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[5]);
-
                             }else{
                                 System.out.println("writeCharacteristic init "+new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue())+ ":failure");
                             }
                             bluetoothGattCharacteristicHelper.mCharacteristicValue = "";
-
-//		            			System.out.print("before pop:");
-//		            			System.out.println(mCharacteristicRingBuffer.size());
                             mCharacteristicRingBuffer.pop();
-//		            			System.out.print("after pop:");
-//		            			System.out.println(mCharacteristicRingBuffer.size());
                         }
                     }
 
                     mIsWritingCharacteristic = true;
 
-                    //clear the buffer to prevent the lock of the mIsWritingCharacteristic
+                    //czyszczenie buffora zeby zapobieg blogowaniu mIsWritingCharacteristic
                     if(mCharacteristicRingBuffer.isFull())
                     {
                         mCharacteristicRingBuffer.clear();
@@ -241,7 +218,7 @@ public class BluetoothLeService extends Service {
                     }
                 }
                 else
-                //CharacteristicWrite fail
+                //ostatni przypadek gdy nie udalo sie odtworzyc charakterystyki
                 {
                     mCharacteristicRingBuffer.clear();
                     System.out.println("onCharacteristicWrite fail:"+ new String(characteristic.getValue()));
@@ -250,7 +227,7 @@ public class BluetoothLeService extends Service {
             }
         }
 
-        @Override
+        @Override //implemetnacja odczytywania charakterystyk
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
@@ -259,13 +236,13 @@ public class BluetoothLeService extends Service {
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
             }
         }
-        @Override
+        @Override //oblsuga deskryptorów
         public void  onDescriptorWrite(BluetoothGatt gatt,
                                        BluetoothGattDescriptor characteristic,
                                        int status){
             System.out.println("onDescriptorWrite  "+characteristic.getUuid().toString()+" "+status);
         }
-        @Override
+        @Override //obsluga zmiany danych w charakterystyce
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             System.out.println("onCharacteristicChanged  "+new String(characteristic.getValue()));
@@ -273,6 +250,7 @@ public class BluetoothLeService extends Service {
         }
     };
 
+    // updatowanie serwisu
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
@@ -282,24 +260,6 @@ public class BluetoothLeService extends Service {
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
         System.out.println("BluetoothLeService broadcastUpdate");
-        // This is special handling for the Heart Rate Measurement profile.  Data parsing is
-        // carried out as per profile specifications:
-        // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-//        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-//            int flag = characteristic.getProperties();
-//            int format = -1;
-//            if ((flag & 0x01) != 0) {
-//                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-//                Log.d(TAG, "Heart rate format UINT16.");
-//            } else {
-//                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-//                Log.d(TAG, "Heart rate format UINT8.");
-//            }
-//            final int heartRate = characteristic.getIntValue(format, 1);
-//            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-//            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-//        } else {
-        // For all other profiles, writes the data formatted in HEX.
         final byte[] data = characteristic.getValue();
         if (data != null && data.length > 0) {
             intent.putExtra(EXTRA_DATA, new String(data));
@@ -307,14 +267,14 @@ public class BluetoothLeService extends Service {
         }
 //        }
     }
-
+    //interefejs konieczny do działania serwisu
     public class LocalBinder extends Binder {
         BluetoothLeService getService() {
             return BluetoothLeService.this;
         }
     }
 
-    @Override
+    @Override //interefejs konieczny do działania serwisu
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
@@ -331,13 +291,11 @@ public class BluetoothLeService extends Service {
     private final IBinder mBinder = new LocalBinder();
 
     /**
-     * Initializes a reference to the local Bluetooth adapter.
-     *
-     * @return Return true if the initialization is successful.
+     * inicjalizacja referancji do adaptera Bluetooth
+     * zwraca true jezezli operacja sie powiodla
      */
     public boolean initialize() {
-        // For API level 18 and above, get a reference to BluetoothAdapter through
-        // BluetoothManager.
+        // dla API powyzej 18m pobieranie referencji do adaptera przez BluetoothManagera
         System.out.println("BluetoothLeService initialize"+mBluetoothManager);
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -357,14 +315,12 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * Connects to the GATT server hosted on the Bluetooth LE device.
+     * łączenie się z serwerem GATT na urządznieu BLE
      *
-     * @param address The device address of the destination device.
+     * @param address adres urządzenia
      *
-     * @return Return true if the connection is initiated successfully. The connection result
-     *         is reported asynchronously through the
-     *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     *         callback.
+     * @return zwraca true jezeli incjalizacja polaczenia sie powiodla
+     *
      */
     public boolean connect(final String address) {
         System.out.println("BluetoothLeService connect"+address+mBluetoothGatt);
@@ -373,27 +329,12 @@ public class BluetoothLeService extends Service {
             return false;
         }
 
-        // Previously connected device.  Try to reconnect.
-//        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
-//                && mBluetoothGatt != null) {
-//            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-//            if (mBluetoothGatt.connect()) {
-//            	System.out.println("mBluetoothGatt connect");
-//                mConnectionState = STATE_CONNECTING;
-//                return true;
-//            } else {
-//            	System.out.println("mBluetoothGatt else connect");
-//                return false;
-//            }
-//        }
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
             Log.w(TAG, "Device not found.  Unable to connect.");
             return false;
         }
-        // We want to directly connect to the device, so we are setting the autoConnect
-        // parameter to false.
         System.out.println("device.connectGatt connect");
         synchronized(this)
         {
@@ -406,10 +347,7 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * Disconnects an existing connection or cancel a pending connection. The disconnection result
-     * is reported asynchronously through the
-     * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     * callback.
+     * rozłączenie istniejącego połączenia bądź anulowanie nadchodzącego
      */
     public void disconnect() {
         System.out.println("BluetoothLeService disconnect");
@@ -421,8 +359,7 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * After using a given BLE device, the app must call this method to ensure resources are
-     * released properly.
+     * Zamykanie wszelkim peryferiów biorączych udział w komunikacji
      */
     public void close() {
         System.out.println("BluetoothLeService close");
@@ -434,11 +371,8 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * Request a read on a given {@code BluetoothGattCharacteristic}. The read result is reported
-     * asynchronously through the {@code BluetoothGattCallback#onCharacteristicRead(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, int)}
-     * callback.
-     *
-     * @param characteristic The characteristic to read from.
+     * Żądanie odczytu danej charakterysyki (BluetoothGattCharacteristic)
+     * @param characteristic charaktektrystyka, z której należy czytać dane
      */
     public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
@@ -450,45 +384,36 @@ public class BluetoothLeService extends Service {
 
 
     /**
-     * Write information to the device on a given {@code BluetoothGattCharacteristic}. The content string and characteristic is
-     * only pushed into a ring buffer. All the transmission is based on the {@code onCharacteristicWrite} call back function,
-     * which is called directly in this function
-     *
-     * @param characteristic The characteristic to write to.
+     * Wpisywanie informacji do urządzenia danej chrakterystyki (BluetoothGattCharacteristic)
+     * @param characteristic charakterystyka, do której należy wpisywać dane
      */
     public void writeCharacteristic(BluetoothGattCharacteristic characteristic) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-
-        //The character size of TI CC2540 is limited to 17 bytes, otherwise characteristic can not be sent properly,
-        //so String should be cut to comply this restriction. And something should be done here:
         String writeCharacteristicString;
         try {
             writeCharacteristicString = new String(characteristic.getValue(),"ISO-8859-1");
         } catch (UnsupportedEncodingException e) {
-            // this should never happen because "US-ASCII" is hard-coded.
             throw new IllegalStateException(e);
         }
         System.out.println("allwriteCharacteristicString:"+writeCharacteristicString);
 
-        //As the communication is asynchronous content string and characteristic should be pushed into an ring buffer for further transmission
         mCharacteristicRingBuffer.push(new BluetoothGattCharacteristicHelper(characteristic,writeCharacteristicString) );
         System.out.println("mCharacteristicRingBufferlength:"+mCharacteristicRingBuffer.size());
 
 
-        //The progress of onCharacteristicWrite and writeCharacteristic is almost the same. So callback function is called directly here
-        //for details see the onCharacteristicWrite function
         mGattCallback.onCharacteristicWrite(mBluetoothGatt, characteristic, WRITE_NEW_CHARACTERISTIC);
 
     }
 
     /**
+     * Aktywowanie bądź deaktywowanie notyfukacji z danej charakterystki
      * Enables or disables notification on a give characteristic.
      *
-     * @param characteristic Characteristic to act on.
-     * @param enabled If true, enable notification.  False otherwise.
+     * @param characteristic określenie chrakterystyki
+     * @param enabled jeżeli chcemy notyfikacjie - true, jeżel nie - false
      */
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
                                               boolean enabled) {
@@ -497,25 +422,11 @@ public class BluetoothLeService extends Service {
             return;
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
-
-        //BluetoothGattDescriptor descriptor = characteristic.getDescriptor(characteristic.getUuid());
-        //descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        //mBluetoothGatt.writeDescriptor(descriptor);
-
-        // This is specific to Heart Rate Measurement.
-//        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-//            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-//                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
-//            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-//            mBluetoothGatt.writeDescriptor(descriptor);
-//        }
     }
 
     /**
-     * Retrieves a list of supported GATT services on the connected device. This should be
-     * invoked only after {@code BluetoothGatt#discoverServices()} completes successfully.
-     *
-     * @return A {@code List} of supported services.
+     * Odtwarzanie listy wsperanych serwisów GATT na urządzeniu
+     * @return zwraca liste urządzeń
      */
     public List<BluetoothGattService> getSupportedGattServices() {
         if (mBluetoothGatt == null) return null;

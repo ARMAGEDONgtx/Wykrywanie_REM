@@ -1,6 +1,7 @@
 package com.example.michal.pulsesensor;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -25,14 +26,14 @@ import java.util.Scanner;
 
 public class Wykres extends AppCompatActivity {
 
-    LineGraphSeries<DataPoint> seria;
-    String [] fileText;
-    GraphView graph;
-    Spinner spinner;
-    FilesAdapter adapter;
-    Context context;
-    boolean czyPierwszyRaz;
-    String fileName;
+    private LineGraphSeries<DataPoint> seria;   // potrzebne do rysowania wykresu
+    private String [] fileText;                 // tekst pobrany z pliku
+    private GraphView graph;                    // rysuje wykres
+    private Spinner spinner;                    // lista plikkow do wczytania
+    private FilesAdapter adapter;               // potrzebne do prawidlowego funkcjonowania spinnera
+    private Context context;                    // context aktywnosci
+    private boolean czyPierwszyRaz;             // czyPierwszyRaz została uruchomiona aktywnosc
+    private String fileName;                    // nazwa pliku
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,18 +152,19 @@ public class Wykres extends AppCompatActivity {
 
     }
 */
-    public void wczytajWykres(View view){
+    public void wczytajWykres(View view){ // wczytuje wykres z wybranego w spinnerze pliku
         final String path = MainActivity.pathToFolder + File.separator+fileName;
         File file = new File(path);
         fileText = Load(file);
         String[] puls = new String[fileText.length];
         puls = separacja(0);
-        //czasMS = separacja(1);
+        String [] czasMS = separacja(1);
         //godzina = separacja(2);
+        graph.setTitle("Wykres "+fileName);
         Rysuj(strToInt(puls), graph);
     }
 
-    int [] strToInt(String [] str){
+    int [] strToInt(String [] str){ // konwersja tablic string do tablic int
         int [] tab = new int[str.length];
         tab[0]=52;
         for (int i=1;i<str.length;i++){
@@ -171,7 +173,7 @@ public class Wykres extends AppCompatActivity {
         }
         return tab;
     }
-    String [] separacja(int wersja){
+    String [] separacja(int wersja){    // separacja potrzebnych danych z pliku
         if(wersja > 2){
             return null;
         }
@@ -229,7 +231,7 @@ public class Wykres extends AppCompatActivity {
         catch (IOException e) {e.printStackTrace();}
         return array;
     }
-    public void Rysuj(int [] puls, GraphView g){
+    public void Rysuj(int [] puls, GraphView g){    // Rysowanie wykresu
         int x=0;
 
         seria = new LineGraphSeries<>();
@@ -246,7 +248,7 @@ public class Wykres extends AppCompatActivity {
         g.getViewport().setScrollableY(true); // enables vertical scrolling
         g.getViewport().setScalable(true); // enables horizontal zooming and scrolling
         g.getViewport().setScalableY(true); // enables vertical zooming and scrolling
-
+        seria.setColor(Color.RED);
         for (int y : puls){
             seria.appendData(new DataPoint(x++,y),true, puls.length);
         }
@@ -257,23 +259,24 @@ public class Wykres extends AppCompatActivity {
         file = "/"+file+".txt";
         return file;
     }
-    public void init(){
+    public void init(){ //inicjalizacja zmiennych
         graph =(GraphView) findViewById(R.id.graph);
         spinner = (Spinner) findViewById(R.id.spinner);
         context = this.getApplicationContext();
         czyPierwszyRaz = true;
     }
-    public void rysujWykres(String nazwaPliku, GraphView g){
+    public void rysujWykres(String nazwaPliku, GraphView g){    // Rusuj wykres  - potrzebne do innej aktywnosci
         final String path = MainActivity.pathToFolder + File.separator+ nazwaPliku;
         File file = new File(path);
         fileText = Load(file);
         String[] puls = new String[fileText.length];
         puls = separacja(0);
-        //czasMS = separacja(1);
+        String [] czasMS = separacja(1);
         //godzina = separacja(2);
+        g.setTitle("Wykres " + nazwaPliku);
         Rysuj(strToInt(puls),g);
     }
-    public String [] listaPlikow(){
+    public String [] listaPlikow(){ // pobiera liste plikow z foledru
         File folder = new File(MainActivity.pathToFolder);
         File[] listOfFiles = folder.listFiles();
         String [] fileNames = new String[listOfFiles.length];
@@ -282,7 +285,7 @@ public class Wykres extends AppCompatActivity {
         }
         return fileNames;
     }
-    public void setSpinner(){
+    public void setSpinner(){   // ustawienia listy wyboru plikow spinner
         ArrayList<String> arrayList = new ArrayList<String>();
         String [] lista = listaPlikow();
         for(String x : lista){

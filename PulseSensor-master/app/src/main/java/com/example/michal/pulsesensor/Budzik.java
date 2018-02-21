@@ -20,15 +20,16 @@ import java.util.Date;
 
 public class Budzik extends AppCompatActivity {
 
-    private TimePicker Time;
-    private Button UstawButton;
-    private Button stopButton;
-    private TextView PokazCzas;
-    private Calendar calendar;
-    AlarmManager alarmManager;
-    Intent intent;
-    PendingIntent pendingIntent;
-    Context context;
+    private TimePicker Time;        // Użytkownik ustawia czas pobudki
+    private Button UstawButton;     // Ustawia budzik
+    private Button stopButton;      // Anuluje budzik
+    private TextView PokazCzas;     // Pokazuje czas
+    private Calendar calendar;      // zmienna do pobrania godziny oraz ustawienia czasu pobudki
+    AlarmManager alarmManager;      // Tworzy serwis do alarmu
+    Intent intent;                  // nowy intent
+    PendingIntent pendingIntent;    // potrzebne do utworzenia alarmu, pozwala na korzystanie
+    // z moich "zgod" i kodu
+    Context context;                // context aktywnosci
 
 
     @Override
@@ -42,7 +43,7 @@ public class Budzik extends AppCompatActivity {
 
 
     }
-    public void ShowTime(){
+    public void ShowTime(){  // Listener do Clicku. Ustawia budzik
 
         UstawButton.setOnClickListener(
                 new View.OnClickListener(){
@@ -51,15 +52,11 @@ public class Budzik extends AppCompatActivity {
                         UstawAlarm();
                         TimeText();
                         Toast.makeText(Budzik.this, "Budzik ustawiony", Toast.LENGTH_SHORT).show();
-                        finish();
-                        Intent intent = new Intent( context, MainActivity.class);
-                        startActivity(intent);
-
                     }
                 }
         );
     }
-    void ustawCzas(){
+    void ustawCzas(){//  Ustawia godzine pobudki
         calendar=Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, Time.getCurrentHour());
         calendar.set(Calendar.MINUTE, Time.getCurrentMinute());
@@ -67,7 +64,7 @@ public class Budzik extends AppCompatActivity {
             calendar.set(calendar.DAY_OF_YEAR,(calendar.get(calendar.DAY_OF_YEAR)+1));
         }
     }
-    void TimeText(){
+    void TimeText(){//Wyswietla czas spania, godzine pobudki itd
         int hour, minute;
         int currentTimeHours, currentTimeMinutes;
         int dlugoscSpaniaHours;
@@ -90,8 +87,9 @@ public class Budzik extends AppCompatActivity {
 
         PokazCzas.setText("Budzik ustawiony na " +calendar.getTime() + TimeText);
     }
-    private void init(){
+    private void init(){// inicjalizacja zmiennych
         Time=(TimePicker)findViewById(R.id.timePicker);
+        Time.setIs24HourView(true);
         UstawButton=(Button)findViewById(R.id.UstawBudzik);
         PokazCzas = (TextView) findViewById(R.id.PokazCzas);
         stopButton=(Button)findViewById(R.id.stop);
@@ -100,7 +98,7 @@ public class Budzik extends AppCompatActivity {
         context=this.getApplicationContext();
 
     }
-    int czasSpaniaGodziny(int Hour, int Minute, int CurHour, int CurMin){
+    int czasSpaniaGodziny(int Hour, int Minute, int CurHour, int CurMin){// do przeliczania czasu spania
         int godziny = (24-CurHour+Hour)%24;
         if((Hour==CurHour)&&(Minute<CurMin))
         {
@@ -113,7 +111,7 @@ public class Budzik extends AppCompatActivity {
             return (godziny-1);
         }
     }
-    int czasSpaniaMinuty(int Hour, int Minute, int CurHour, int CurMin){
+    int czasSpaniaMinuty(int Hour, int Minute, int CurHour, int CurMin){// do przeliczania czasu spania
         int minuty = Minute-CurMin;
         if(minuty>=0){
             return (minuty%60);
@@ -128,7 +126,7 @@ public class Budzik extends AppCompatActivity {
         long czas= ((godziny + minuty)*60000);
         return czas;
     }
-    private void UstawAlarm(){
+    private void UstawAlarm(){//Ustawia alarm
         ustawCzas();
         MainActivity.czyBudzic=1;
         stopButton.setEnabled(true);
@@ -137,7 +135,7 @@ public class Budzik extends AppCompatActivity {
         alarmManager=(AlarmManager)getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),pendingIntent);
     }
-    public void StopButton(View view){
+    public void StopButton(View view){//Anuluje ustawiony alarm
         MainActivity.czyBudzic=0;
         alarmManager.cancel(pendingIntent);
         stopButton.setEnabled(false);

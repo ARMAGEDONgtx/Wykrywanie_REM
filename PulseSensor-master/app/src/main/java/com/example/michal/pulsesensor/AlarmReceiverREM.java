@@ -28,6 +28,8 @@ public class AlarmReceiverREM  extends BroadcastReceiver{
         context.startService(serviceIntent);
 
         // WROBSI GRZEBAL*********************************************
+
+
         Intent intent2 = new Intent(context, blunoactivity.class);
         intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent2);

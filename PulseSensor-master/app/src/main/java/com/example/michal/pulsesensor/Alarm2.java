@@ -14,12 +14,12 @@ import com.jjoe64.graphview.GraphView;
 
 public class Alarm2 extends AppCompatActivity {
 
-    private  MediaPlayer music;
-    private  AudioManager audio;
-    private  int currentVolume;
-    private Button menu;
-    private Button stopAlarm;
-    private GraphView graphView;
+    private  MediaPlayer music;     // Muzyka Alarmu
+    private  AudioManager audio;    // Potrzebne do regulowania głośności
+    private  int currentVolume;     // Zmienna do zapisania aktualnej glosnosci
+    private Button menu;            // Powrot do menu
+    private Button stopAlarm;       // zmienna zatrzymuje alarm
+    private GraphView graphView;    // Potrzebna do rysowania wykrsu
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +32,7 @@ public class Alarm2 extends AppCompatActivity {
 
     }
 
-    void init(){
+    void init(){// Inicjalizacja zmiennych
         MainActivity.czyBudzic=0;
         audio = (AudioManager)this.getSystemService(this.AUDIO_SERVICE);
         music = MediaPlayer.create(this, Settings.System.DEFAULT_RINGTONE_URI);
@@ -40,11 +40,11 @@ public class Alarm2 extends AppCompatActivity {
         menu=(Button)findViewById(R.id.powrotDoMenu);
         stopAlarm = (Button)findViewById(R.id.stopAlarm);
     }
-    void startMusic(){
+    void startMusic(){// Start alarmu
         music.setLooping(true);
         music.start();
     }
-    public void stopMusic(View view){
+    public void stopMusic(View view){//stop alarm, rysowanie wykresu
         music.stop();
         audio.setStreamVolume(AudioManager.STREAM_MUSIC,currentVolume,1);
         Wykres wykres = new Wykres();
@@ -54,10 +54,12 @@ public class Alarm2 extends AppCompatActivity {
         stopAlarm.setEnabled(false);
     }
     void setAudio(){
-        int Volume = (int)(0.1*audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+        /*Ustawia glosnosc na 0.8 glosnosci maksymalnej, zeby była pewnosfc że
+                         muzyka będzie dzwonić*/
+        int Volume = (int)(0.8*audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
         audio.setStreamVolume(AudioManager.STREAM_MUSIC,Volume,1);
     }
-    public void powrotDoMenu(View view){
+    public void powrotDoMenu(View view){// powrot do menu glownego
         this.finish();
         Intent i = new Intent(Alarm2.this, MainActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -23,15 +23,18 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import static com.example.michal.pulsesensor.BudziRem.alarmManagerMax;
+import static com.example.michal.pulsesensor.BudziRem.pendingIntentMax;
+
 public class blunoactivity  extends BlunoLibrary {
-    private Button buttonScan;
-    private Button buttonSerialSend;
-    //private EditText serialSendText;
-    private TextView serialReceivedText;
-    private TextView TextPulse;
-    private Calendar m_calendar;
-    public static Integer pulse = 0;
-    public static boolean obudzono = false;
+    private Button buttonScan; //referencja do przycisku 'scan'
+    private Button buttonSerialSend; //uzywane w poprzednich wersjach
+    //private EditText serialSendText; //uzywane w poprzednich wersjach
+    private TextView serialReceivedText; //referencja do danych odczytanych
+    private TextView TextPulse; //referencja do wyswietlacza pulsu
+    private Calendar m_calendar; //referencja do kalendarza, aby uzyskiwac aktualny czas
+    public static Integer pulse = 0; //zmienna do algorytmu
+    public static boolean obudzono = false; //wykrycie czy budzik zadzwonil
     //************************************************************************************************
     public static double current_numb_probes = 0; // liczba probek ( do odliczania okresu np 5min)
     public static int global_numb_probes = 0; // liczba probek odczytanych od poczatku
@@ -39,45 +42,50 @@ public class blunoactivity  extends BlunoLibrary {
     public static double current_mean = 50; // srednia z ostatnich (np 5 min)
     public static int numb_probes_to_wait = 100; // strefa nieczulosci, do obliczenia wiarygodnej sredniej pulsu podczas snu
     //************************************************************************************************
-
+    //PAWLAK*****************************************************************************************
+    public static boolean czyPolaczono = false;
+    //***********************************************************************************************
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blunoactivity);
-        onCreateProcess();														//onCreate Process by BlunoLibrary
+        onCreateProcess();														//onCreate Process w BlunoLibrary
 
         m_calendar = Calendar.getInstance();
-        serialBegin(115200);													//set the Uart Baudrate on BLE chip to 115200
+        serialBegin(115200);													//ustawienie baudratu
 
         TextPulse = (TextView)findViewById(R.id.TextView_Pulse);
 
-        serialReceivedText=(TextView) findViewById(R.id.serialReveicedText);	//initial the EditText of the received data
-        //serialSendText=(EditText) findViewById(R.id.serialSendText);			//initial the EditText of the sending data
+        serialReceivedText=(TextView) findViewById(R.id.serialReveicedText);	//połaczenie ui z referencja
+        //serialSendText=(EditText) findViewById(R.id.serialSendText);			//połaczenie ui z referencja
 
-        buttonSerialSend = (Button) findViewById(R.id.buttonSerialSend);		//initial the button for sending the data
+   /*     buttonSerialSend = (Button) findViewById(R.id.buttonSerialSend);		//połaczenie ui z referencja
+
+        //obsluga przicsku , uzywana w poprzednich wersjach
         buttonSerialSend.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
-
-                serialSend("a");				//send the data to the BLUNO
+                serialSend("a");				//wysylanie 'a' do BLUNO, jako znak , ze chcemy dane
             }
-        });
+        });*/
 
-        buttonScan = (Button) findViewById(R.id.buttonScan);					//initial the button for scanning the BLE device
+        buttonScan = (Button) findViewById(R.id.buttonScan);					//połaczenie ui z referencja
+
+        //dialog do skanowania urządzeń
         buttonScan.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
-                buttonScanOnClickProcess();										//Alert Dialog for selecting the BLE device
-                //testttt
-                //writeToFile("test");
+                buttonScanOnClickProcess();
+
             }
         });
     }
+
 
     protected void onResume(){
         super.onResume();
@@ -116,6 +124,7 @@ public class blunoactivity  extends BlunoLibrary {
     public void onConectionStateChange(connectionStateEnum theConnectionState) {//Once connection state changes, this function will be called
         switch (theConnectionState) {											//Four connection state
             case isConnected:
+                blunoactivity.czyPolaczono = true;
                 buttonScan.setText("Connected");
                 break;
             case isConnecting:
@@ -134,6 +143,8 @@ public class blunoactivity  extends BlunoLibrary {
                 break;
         }
     }
+
+    //uzywana w poprzednich wersjach
     private void writeToFile(String data) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
         String filename = sdf.format(m_calendar.getTime());
@@ -158,8 +169,8 @@ public class blunoactivity  extends BlunoLibrary {
         }
     }
 
-    @Override
-    public void onSerialReceived(String theString) {							//Once connection data received, this function will be called
+    @Override //kiedy otrzymamy dane ta funkcja jest wywolywana
+    public void onSerialReceived(String theString) {
         /*m_calendar = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         String data = sdf.format(m_calendar.getTime());
@@ -168,8 +179,7 @@ public class blunoactivity  extends BlunoLibrary {
 
         // TODO Auto-generated method stub
         theString = theString.replace(theString.substring(theString.length() - 2), "");
-        serialReceivedText.append(theString+", "+ global_numb_probes + ", " + current_numb_probes + ", " + current_mean + ", " + global_mean+ "\r\n");							//append the text into the EditText
-        //The Serial data from the BLUNO may be sub-packaged, so using a buffer to hold the String is a good choice.
+        serialReceivedText.append(theString+", "+ global_numb_probes + ", " + current_numb_probes + ", " + current_mean + ", " + global_mean+ "\r\n");
         ((ScrollView)serialReceivedText.getParent()).fullScroll(View.FOCUS_DOWN);
         try {
             pulse = Integer.parseInt(theString);
@@ -182,19 +192,57 @@ public class blunoactivity  extends BlunoLibrary {
         TextPulse.setText(theString);
 
         //ALGORYTM**********************************************************************************
-        if (!obudzono) // warunek , ze nowy pomiar
+
+        boolean time_to_wake = false; // sprawdzanie czy jest juz godzina do obudzenia
+
+        if(BudziRem.Godz_forBLE < Calendar.getInstance().getTime().getHours())
+        {
+            time_to_wake = true;
+        }
+        else if(BudziRem.Godz_forBLE == Calendar.getInstance().getTime().getHours())
+        {
+            if(BudziRem.Min_forBLE <= Calendar.getInstance().getTime().getMinutes())
+            {
+                time_to_wake = true;
+            }
+        }
+
+        boolean time_to_start_couting = false; // sprawdzanie czy jest juz godzina do obliczania sredniej
+
+        if(BudziRem.Godz_forBLE < (Calendar.getInstance().getTime().getHours() - 1))
+        {
+            time_to_start_couting = true;
+        }
+        else if(BudziRem.Godz_forBLE == (Calendar.getInstance().getTime().getHours() - 1))
+        {
+            if(BudziRem.Min_forBLE <= Calendar.getInstance().getTime().getMinutes())
+            {
+                time_to_start_couting = true;
+            }
+        }
+
+
+
+        if (!obudzono && time_to_start_couting) // warunek , ze budzik juz zadzwonil
+
         {
             if (current_numb_probes >= 50 && global_numb_probes >= numb_probes_to_wait) // zamiast 100 wyliczyc przedzial w jakim ma byc tymaczasowa srednia liczona
             {
-                if (current_mean >= global_mean * 1.2) // 1.2 wspolczynnik o ile musi byc wieksza tymczasowa srednia od globalnej( z calego pomairu)
+                if ((current_mean >= global_mean * 1.2) && time_to_wake) // 1.2 wspolczynnik o ile musi byc wieksza tymczasowa srednia od globalnej( z calego pomairu)
                 {
-                    // && BudziRem.Godz_forBLE <= Calendar.getInstance().getTime().getHours() && BudziRem.Min_forBLE <= Calendar.getInstance().getTime().getMinutes() warunek@@@
                     MainActivity.czyBudzic = -1;
                     //Toast.makeText(context, "REM", Toast.LENGTH_SHORT).show();
                     Intent i = new Intent(getBaseContext().getApplicationContext(), Alarm2.class);
                     i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     getBaseContext().startActivity(i);
                     obudzono = true;
+                    blunoactivity.current_numb_probes = 0;
+                    blunoactivity.current_mean = 0;
+                    blunoactivity.global_numb_probes = 0;
+                    blunoactivity.global_mean = 0;
+                    // PAWLAK GRZEBAL*************************************
+                    BudziRem.alarmManagerMax.cancel(BudziRem.pendingIntentMax);
+                    // ***************************************************
                 } else {
                     current_mean = 0;
                     current_numb_probes = 0;
@@ -208,4 +256,9 @@ public class blunoactivity  extends BlunoLibrary {
         }
     }
 
+    public void backToMenu(View v){
+        finish();
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
 }

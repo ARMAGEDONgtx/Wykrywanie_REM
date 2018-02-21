@@ -16,21 +16,23 @@ import java.util.Random;
 
 public class BudziRem extends AppCompatActivity {
 
-    private NumberPicker minGodz = null;
-    private NumberPicker minMinuty = null;
-    private NumberPicker maxGodz = null;
-    private NumberPicker maxMinuty = null;
-    private Button ustawButton= null;
-    private Button anulujButton= null;
-    private TextView textView = null;
-    private Random randomNumber = null;
-    private Budzik budzik = null;
-    private Calendar calendar;
-    private  AlarmManager alarmManager;
-    private Intent intent;
-    private PendingIntent pendingIntent;
+    private NumberPicker minGodz = null;            //minimalny czas spania
+    private NumberPicker minMinuty = null;          //   -,-
+    private NumberPicker maxGodz = null;            //maksymalny czas spania
+    private NumberPicker maxMinuty = null;          //   -,-
+    private Button ustawButton= null;               //Ustawia budzik REM
+    private Button anulujButton= null;              // Anuluje budzik
+    private TextView textView = null;               // Czas minimalnego spania, czy budzik ustawiony itd
+    private Random randomNumber = null;             // POtrzebne do testow
+    private Budzik budzik = null;                   // korzysta z przeliczania czasu spania
+    private Calendar calendar;                      // czas spania, aktualny czas itd
+    private AlarmManager alarmManager;              // tworzy nowy serwis alarm
+    private Intent intent;                          // intemt do alarmu
+    private PendingIntent pendingIntent;            // do alarmu
     public static int Godz_forBLE = 0;
     public static int Min_forBLE = 0;
+    public static AlarmManager alarmManagerMax;
+    public static PendingIntent pendingIntentMax;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +46,7 @@ public class BudziRem extends AppCompatActivity {
 
     }
 
-    public void onUstaw(){
+    public void onUstaw(){// listener do ustawiania budzika
         ustawButton.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
@@ -54,6 +56,13 @@ public class BudziRem extends AppCompatActivity {
                         UstawAlarm();
                         ustawMaxCzasSpania();
                         TimeText();
+                        Godz_forBLE = minGodz.getValue();
+                        Min_forBLE = minMinuty.getValue();
+                        blunoactivity.current_numb_probes = 0;
+                        blunoactivity.current_mean = 0;
+                        blunoactivity.global_numb_probes = 0;
+                        blunoactivity.global_mean = 0;
+                        blunoactivity.obudzono = false;
                         //Intent intent = new Intent(this, blunoactivity.class);
                         //startActivity(intent);
                     }
@@ -61,18 +70,18 @@ public class BudziRem extends AppCompatActivity {
         );
     }
 
-    private int losowanie(){
+    private int losowanie(){// funkcja wykorzystywana wcześniej do testów
         int granicaRandom = (int)budzik.czasSpania_ms(maxGodz.getValue(),
                 maxMinuty.getValue(),minGodz.getValue(), minMinuty.getValue());
         int random = randomNumber.nextInt(granicaRandom);
         return random;
     }
-    void ustawCzas(){
+    void ustawCzas(){ // ustawia minimalny czas spania
         calendar=Calendar.getInstance();
         //WROBSI GRZEBAL****************************************************************************
         calendar.set(Calendar.HOUR_OF_DAY, (Calendar.getInstance().getTime().getHours()));
         calendar.set(Calendar.MINUTE,( Calendar.getInstance().getTime().getMinutes()));
-        calendar.set(Calendar.SECOND, (Calendar.getInstance().getTime().getSeconds()+10));
+        calendar.set(Calendar.SECOND, (Calendar.getInstance().getTime().getSeconds()+5));
         Godz_forBLE = minGodz.getValue();
         Godz_forBLE = minMinuty.getValue();
         //******************************************************************************************
@@ -83,7 +92,7 @@ public class BudziRem extends AppCompatActivity {
         }
 
     }
-    private void init(){
+    private void init(){    // inicjalizacja zmiennych
         minGodz = (NumberPicker)findViewById(R.id.minGodz);
         minMinuty = (NumberPicker)findViewById(R.id.minMinuty);
         maxGodz = (NumberPicker)findViewById(R.id.maxGodz);
@@ -99,26 +108,25 @@ public class BudziRem extends AppCompatActivity {
         setMinuty(minMinuty);
         setGodz(maxGodz);
         setMinuty(maxMinuty);
-
     }
-    private  void setGodz(NumberPicker NP){
+    private  void setGodz(NumberPicker NP){     // Ustawienia timePickera
         NP.setMaxValue(23);
         NP.setMinValue(0);
         NP.setWrapSelectorWheel(true);
     }
-    private void setMinuty(NumberPicker NP){
+    private void setMinuty(NumberPicker NP){    // Ustawienia timePickera
         NP.setMaxValue(59);
         NP.setMinValue(0);
         NP.setWrapSelectorWheel(true);
     }
-    private void initValue(){
+    private void initValue(){               //Ustawienia timePickera
         minGodz.setValue(Calendar.getInstance().getTime().getHours());
         minMinuty.setValue(Calendar.getInstance().getTime().getMinutes());
         maxGodz.setValue((Calendar.getInstance().getTime().getHours()+1));
         maxMinuty.setValue(Calendar.getInstance().getTime().getMinutes());
     }
 
-    private void UstawAlarm(){
+    private void UstawAlarm(){      //Ustaw Alarm
         ustawCzas();
         MainActivity.czyBudzic=0;
         alarmManager=(AlarmManager)getSystemService(Context.ALARM_SERVICE);
@@ -128,7 +136,7 @@ public class BudziRem extends AppCompatActivity {
         //Intent serviceIntent = new Intent(getBaseContext(),AlarmReceiverREM.class);
         //getBaseContext().startService(serviceIntent);
     }
-    void TimeText(){
+    void TimeText(){            // pokazuja czas spania itd itd
         int hour, minute;
         int currentTimeHours, currentTimeMinutes;
         int dlugoscSpaniaHours;
@@ -152,20 +160,20 @@ public class BudziRem extends AppCompatActivity {
 
         textView.setText("Budzik ustawiony na " +calendar.getTime() + TimeText);
     }
-    public void AnulujBudzik(View view){
+    public void AnulujBudzik(View view){        // anuluje ustawiony budzik
 
         alarmManager.cancel(pendingIntent);
         anulujButton.setEnabled(false);
         textView.setText(null);
         Toast.makeText(BudziRem.this, "Budzik anulowany", Toast.LENGTH_SHORT).show();
     }
-    public void ustawMaxCzasSpania(){
+    public void ustawMaxCzasSpania(){          // ustawia maxymalny czas spania
         Calendar calendarMx= Calendar.getInstance();
         calendarMx.set(Calendar.HOUR_OF_DAY, (maxGodz.getValue()));
         calendarMx.set(Calendar.MINUTE,( maxMinuty.getValue()));
-        AlarmManager alarmManagerMx=(AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        BudziRem.alarmManagerMax=(AlarmManager)getSystemService(Context.ALARM_SERVICE);
         Intent intentMx = new Intent (this, AlarmReceiver.class);
-        PendingIntent pendingIntentMx=PendingIntent.getBroadcast(this,0,intentMx,0);
-        alarmManagerMx.set( AlarmManager.RTC_WAKEUP, calendarMx.getTimeInMillis(),pendingIntentMx);
+        BudziRem.pendingIntentMax=PendingIntent.getBroadcast(this,0,intentMx,0);
+        BudziRem.alarmManagerMax.set( AlarmManager.RTC_WAKEUP, calendarMx.getTimeInMillis(),BudziRem.pendingIntentMax);
     }
 }
